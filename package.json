@@ -1,0 +1,12 @@
+{
+  "name": "ai-pet-lumo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "拾光 Lumo —— 会记得你、活在你生活里的 AI 电子宠物（安卓可安装 PWA 游戏）",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "test": "node test/smoke.test.js"
+  },
+  "keywords": ["ai-pet", "virtual-pet", "companion", "pwa", "android", "lumo"],
+  "license": "MIT"
+}

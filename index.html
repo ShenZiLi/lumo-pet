@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFE3A3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <title>拾光 Lumo · 电子宠物</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <!-- 领养 / 引导 -->
+  <section id="screen-adopt" class="screen active">
+    <div class="adopt-wrap">
+      <h1 class="brand">拾光 <span>Lumo</span></h1>
+      <p class="brand-sub">一只会记得你、活在你生活里的电子伙伴</p>
+      <p class="adopt-q">选一只陪你的小伙伴：</p>
+      <div id="pet-choices" class="pet-choices"></div>
+      <input id="pet-name" class="name-input" maxlength="8" placeholder="给它起个名字（默认：光球）" />
+      <button id="btn-adopt" class="btn-primary">领养它，开始故事 ✨</button>
+      <p class="adopt-note">也可以 <a id="link-import">导入已有宠物档案</a></p>
+    </div>
+  </section>
+
+  <!-- 主界面 -->
+  <section id="screen-home" class="screen">
+    <header class="topbar">
+      <div class="tb-left">
+        <span id="pet-emoji" class="tb-emoji">🌟</span>
+        <div>
+          <div id="pet-name-top" class="tb-name">光球</div>
+          <div id="pet-level" class="tb-level">Lv.1</div>
+        </div>
+      </div>
+      <div class="tb-right">
+        <span class="coin">🪙 <b id="coin-num">0</b></span>
+      </div>
+    </header>
+
+    <div id="pet-stage" class="pet-stage">
+      <div id="weather-badge" class="weather-badge" title="现实锚点"></div>
+      <div id="speech" class="speech hidden"></div>
+      <div id="pet-body" class="pet-body">🌟</div>
+      <div id="pet-mood" class="pet-mood">😊</div>
+      <div class="pet-shadow"></div>
+    </div>
+
+    <div class="needs">
+      <div class="need"><span>🍖 饥饿</span><div class="bar"><i id="bar-hunger"></i></div></div>
+      <div class="need"><span>🚿 卫生</span><div class="bar"><i id="bar-hygiene"></i></div></div>
+      <div class="need"><span>⚡ 精力</span><div class="bar"><i id="bar-energy"></i></div></div>
+      <div class="need"><span>💗 心情</span><div class="bar"><i id="bar-mood"></i></div></div>
+      <div class="need"><span>🤝 亲密度</span><div class="bar"><i id="bar-affection"></i></div></div>
+    </div>
+
+    <div class="actions">
+      <button class="act" data-act="feed">🍖<small>喂食</small></button>
+      <button class="act" data-act="clean">🚿<small>洗澡</small></button>
+      <button class="act" data-act="sleep">💤<small>睡觉</small></button>
+      <button class="act" data-act="play">🎮<small>玩耍</small></button>
+      <button class="act" data-act="pet">🤚<small>抚摸</small></button>
+      <button class="act" data-act="talk">💬<small>说话</small></button>
+    </div>
+
+    <nav class="bottomnav">
+      <button class="nav-btn active" data-nav="home">🏠<small>主页</small></button>
+      <button class="nav-btn" data-nav="shop">🛍️<small>商店</small></button>
+      <button class="nav-btn" data-nav="memory">📖<small>记忆</small></button>
+      <button class="nav-btn" data-nav="settings">⚙️<small>设置</small></button>
+    </nav>
+  </section>
+
+  <!-- 商店 -->
+  <section id="screen-shop" class="screen">
+    <header class="subbar"><button class="back" data-nav="home">‹</button><h2>商店</h2><span class="coin">🪙 <b id="coin-num2">0</b></span></header>
+    <div id="shop-list" class="shop-list"></div>
+  </section>
+
+  <!-- 记忆 / 日记 -->
+  <section id="screen-memory" class="screen">
+    <header class="subbar"><button class="back" data-nav="home">‹</button><h2>记忆与日记</h2></header>
+    <div class="memory-tabs">
+      <button class="mtab active" data-mtab="diary">日记</button>
+      <button class="mtab" data-mtab="mem">它的记忆</button>
+      <button class="mtab" data-mtab="grow">它长大了</button>
+    </div>
+    <div id="mem-diary" class="mem-panel active"></div>
+    <div id="mem-mem" class="mem-panel"></div>
+    <div id="mem-grow" class="mem-panel"></div>
+  </section>
+
+  <!-- 设置 -->
+  <section id="screen-settings" class="screen">
+    <header class="subbar"><button class="back" data-nav="home">‹</button><h2>设置</h2></header>
+    <div class="settings">
+      <label class="set-row"><span>🔔 提醒通知</span><input type="checkbox" id="set-notify" /></label>
+      <label class="set-row"><span>🌤️ 天气城市</span>
+        <select id="set-city">
+          <option>Beijing</option><option>Shanghai</option><option>Guangzhou</option>
+          <option>Shenzhen</option><option>Chengdu</option><option>Hangzhou</option>
+          <option>Tokyo</option><option>NewYork</option><option>London</option><option>Singapore</option>
+        </select>
+      </label>
+      <label class="set-row"><span>🚶 今天步数</span><input type="number" id="set-steps" min="0" placeholder="填了它也会精神" style="width:120px" /></label>
+      <label class="set-row"><span>🤖 自有 AI Key（可选）</span><input type="password" id="set-llm" placeholder="留空则用本地智能" /></label>
+      <div class="set-row col">
+        <span>📊 人格</span>
+        <div id="persona-bars" class="persona-bars"></div>
+      </div>
+      <button class="btn-line" id="btn-export">💾 导出宠物档案（数字永生）</button>
+      <button class="btn-line" id="btn-import">📥 导入宠物档案</button>
+      <button class="btn-line" id="btn-archive">🕯️ 遗产/只读纪念模式</button>
+      <button class="btn-danger" id="btn-reset">🗑️ 重新领养（清空）</button>
+      <p class="set-tip">陪伴永远免费、纯净、不打断。你投入的每一份情感，都安全存放在你手里。</p>
+    </div>
+  </section>
+
+  <!-- 聊天浮层 -->
+  <div id="chat" class="chat hidden">
+    <div class="chat-head"><span id="chat-title">和 光球 说话</span><button id="chat-close">✕</button></div>
+    <div id="chat-log" class="chat-log"></div>
+    <div class="chat-input">
+      <input id="chat-text" placeholder="告诉它点什么，它真的会记住…" maxlength="200" />
+      <button id="chat-send">发送</button>
+    </div>
+  </div>
+
+  <!-- 拍照浮层 -->
+  <div id="photo" class="chat hidden">
+    <div class="chat-head"><span>📷 和它分享一张照片</span><button id="photo-close">✕</button></div>
+    <div class="photo-body">
+      <input type="file" id="photo-file" accept="image/*" capture="environment" />
+      <div id="photo-react" class="photo-react"></div>
+    </div>
+  </div>
+
+  <!-- 提示 toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- 脚本（顺序加载核心模块，最后加载控制器） -->
+  <script src="src/state.js"></script>
+  <script src="src/needs.js"></script>
+  <script src="src/memory.js"></script>
+  <script src="src/personality.js"></script>
+  <script src="src/mood.js"></script>
+  <script src="src/dialogue.js"></script>
+  <script src="src/anchors.js"></script>
+  <script src="src/economy.js"></script>
+  <script src="src/persistence.js"></script>
+  <script src="src/onboarding.js"></script>
+  <script src="src/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# 忽略
+node_modules/
+.DS_Store/
+*.log
+dist/
+.android_build/
