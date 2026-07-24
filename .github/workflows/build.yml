@@ -59,7 +59,7 @@ jobs:
       - name: 复制网页资源到 assets
         run: |
           mkdir -p android/app/src/main/assets/lumo
-          cp index.html styles src assets manifest.webmanifest sw.js android/app/src/main/assets/lumo/
+          cp -r index.html styles src assets manifest.webmanifest sw.js android/app/src/main/assets/lumo/
       - name: 构建 Release APK
         uses: gradle/gradle-build-action@v3
         with:
