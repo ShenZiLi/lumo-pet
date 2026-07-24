@@ -1,0 +1,110 @@
+name: Build & Package Lumo Pet
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  tags:
+    - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # 1) 运行核心逻辑冒烟测试
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 核心逻辑冒烟测试
+        run: node test/smoke.test.js
+
+  # 2) 打包可安装的 PWA（网页成品）
+  package:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 组装发布包
+        run: |
+          mkdir -p dist
+          cp -r index.html styles src assets manifest.webmanifest sw.js dist/
+          cd dist && zip -r ../lumo-pet-web.zip . && cd ..
+          echo "打包完成：$(du -h lumo-pet-web.zip | cut -f1)"
+      - name: 上传网页成品
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumo-pet-web
+          path: lumo-pet-web.zip
+
+  # 3) （尽力）构建 Android APK
+  apk:
+    needs: test
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: 设置 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: 安装 Android SDK
+        uses: android-actions/setup-android@v3
+      - name: 安装 SDK 平台与构建工具
+        run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
+      - name: 复制网页资源到 assets
+        run: |
+          mkdir -p android/app/src/main/assets/lumo
+          cp index.html styles src assets manifest.webmanifest sw.js android/app/src/main/assets/lumo/
+      - name: 构建 Release APK
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: 8.9
+          build-root-directory: android
+          arguments: assembleRelease
+      - name: 上传 APK
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: lumo-pet-apk
+          path: android/app/build/outputs/apk/release/*.apk
+
+  # 4) 打 Release（标签触发）
+  release:
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: lumo-pet-web
+      - name: 下载 APK（可选）
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: lumo-pet-apk
+      - name: 收集成品
+        run: |
+          mkdir -p release-assets
+          cp lumo-pet-web/lumo-pet-web.zip release-assets/ 2>/dev/null || true
+          cp lumo-pet-apk/*.apk release-assets/ 2>/dev/null || true
+          ls -la release-assets/
+      - name: 发布 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 拾光 Lumo ${{ github.ref_name }}
+          body: |
+            ## 拾光 Lumo ${{ github.ref_name }}
+
+            一款会记得你、活在你生活里的 AI 电子宠物（安卓游戏）。
+
+            ### 下载
+            - **lumo-pet-web.zip**：可安装的 PWA 网页成品（解压后用浏览器/静态服务器打开，或「添加到主屏幕」获得 App 体验）
+            - **app-release-unsigned.apk**：Android 安装包（若构建成功）
+          files: release-assets/*
+          fail_on_unmatched_files: false
