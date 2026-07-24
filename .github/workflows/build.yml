@@ -3,9 +3,8 @@ name: Build & Package Lumo Pet
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
-  tags:
-    - 'v*'
   workflow_dispatch:
 
 permissions:
