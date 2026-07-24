@@ -73,26 +73,32 @@ jobs:
           name: lumo-pet-apk
           path: android/app/build/outputs/apk/release/*.apk
 
-  # 4) 打 Release（标签触发）
+  # 4) 打 Release（标签触发，需等网页成品与 APK 都就绪）
   release:
-    needs: package
+    needs: [package, apk]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - name: 下载网页成品
+        uses: actions/download-artifact@v4
         with:
           name: lumo-pet-web
+          path: web
       - name: 下载 APK（可选）
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: lumo-pet-apk
+          path: apk
       - name: 收集成品
         run: |
           mkdir -p release-assets
-          cp lumo-pet-web/lumo-pet-web.zip release-assets/ 2>/dev/null || true
-          cp lumo-pet-apk/*.apk release-assets/ 2>/dev/null || true
+          find web -type f -name '*.zip' -exec cp {} release-assets/ \;
+          find apk -type f -name '*.apk' -exec cp {} release-assets/ \;
+          echo "=== release-assets 内容 ==="
           ls -la release-assets/
+          echo "=== 总大小 ==="
+          du -sh release-assets/
       - name: 发布 Release
         uses: softprops/action-gh-release@v2
         with:
