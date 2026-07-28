@@ -40,11 +40,16 @@ jobs:
           name: lumo-pet-web
           path: lumo-pet-web.zip
 
-  # 3) （尽力）构建 Android APK
+  # 3) （尽力）构建 Android APK（已签名）
   apk:
     needs: test
     runs-on: ubuntu-latest
     continue-on-error: true
+    env:
+      KEYSTORE_PATH: ${{ github.workspace }}/android/keystore/lumo-release.keystore
+      KEYSTORE_PASSWORD: lumo-release-2024
+      KEY_ALIAS: lumo
+      KEY_PASSWORD: lumo-release-2024
     steps:
       - uses: actions/checkout@v4
       - name: 设置 JDK 17
@@ -60,6 +65,17 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets/lumo
           cp -r index.html styles src assets manifest.webmanifest sw.js android/app/src/main/assets/lumo/
+      - name: 生成签名密钥（演示用）
+        run: |
+          mkdir -p android/keystore
+          keytool -genkeypair -v \
+            -keystore "$KEYSTORE_PATH" \
+            -alias "$KEY_ALIAS" \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            -dname "CN=Lumo, OU=Pet, O=Lumo, L=Beijing, S=Beijing, C=CN"
+          echo "密钥库生成完成：$(ls -la "$KEYSTORE_PATH")"
       - name: 构建 Release APK
         uses: gradle/gradle-build-action@v3
         with:
@@ -72,6 +88,12 @@ jobs:
         with:
           name: lumo-pet-apk
           path: android/app/build/outputs/apk/release/*.apk
+      - name: 验证 APK 签名
+        if: success()
+        run: |
+          APK=$(ls android/app/build/outputs/apk/release/*.apk | head -n1)
+          echo 校验文件: $APK
+          $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose $APK
 
   # 4) 打 Release（标签触发，需等网页成品与 APK 都就绪）
   release:
@@ -110,6 +132,6 @@ jobs:
 
             ### 下载
             - **lumo-pet-web.zip**：可安装的 PWA 网页成品（解压后用浏览器/静态服务器打开，或「添加到主屏幕」获得 App 体验）
-            - **app-release-unsigned.apk**：Android 安装包（若构建成功）
+            - **app-release.apk**：已签名的 Android 安装包（可直接安装）
           files: release-assets/*
           fail_on_unmatched_files: false
